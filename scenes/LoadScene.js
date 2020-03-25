@@ -11,11 +11,16 @@ class LoadScene extends Phaser.Scene{
 
     //robots room
     this.load.image('room', 'assets/room.png');
+    //this.load.image('room', 'assets/roomLayout.png');
+    this.load.image('wallH', 'assets/wallHorizontal.png');
+    this.load.image('wallV', 'assets/wallVertical.png');
 
     //sprites
 
     this.load.spritesheet('robot', 'assets/robot.png', { frameWidth: 48, frameHeight: 51 });
+    //objects
     this.load.spritesheet('chargeStation', 'assets/charger.png', { frameWidth: 80, frameHeight: 80 });
+    this.load.spritesheet('tv', 'assets/tv.png', { frameWidth: 112, frameHeight: 112 });
 
 
   }
@@ -74,9 +79,36 @@ class LoadScene extends Phaser.Scene{
       repeat: -1
     })
     //charging station
+
+    this.anims.create({
+      key: 'still',
+      frames: [ { key: 'chargeStation', frame: 3 } ],
+      frameRate: 8,
+    })
     this.anims.create({
       key: 'blink',
       frames: this.anims.generateFrameNumbers('chargeStation', {start: 0, end: 1}),
+      frameRate: 8,
+      repeat: -1
+    })
+
+    //tv animations
+    this.anims.create({
+      key: 'off',
+      frames: [ { key: 'tv', frame: 0 } ],
+      frameRate: 8,
+    })
+
+    this.anims.create({
+      key: 'on',
+      frames: this.anims.generateFrameNumbers('tv', {start: 5, end: 9}),
+      frameRate: 5,
+      repeat: -1
+    })
+
+    this.anims.create({
+      key: 'static',
+      frames: this.anims.generateFrameNumbers('tv', {start: 10, end: 12}),
       frameRate: 8,
       repeat: -1
     })
