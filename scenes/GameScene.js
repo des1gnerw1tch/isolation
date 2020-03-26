@@ -2,6 +2,7 @@
 var robot;
 //input
 var keys;
+var cursorKeys;
 var lastKey;
 var isKeyDown;
 //meters
@@ -12,6 +13,10 @@ var sanity;
 //stations
 var chargeStation;
 var tv;
+var bookshelf;
+var dumbbells;
+var popText;
+var robotInteracting;
 
 //timers
 var tick;
@@ -42,8 +47,10 @@ class GameScene extends Phaser.Scene  {
     robot = this.physics.add.sprite(400, 300, 'robot', 8);
     robot.setScale(.5);
     robot.setDepth(1);
+    robotInteracting = false;
     //input
-    keys = this.input.keyboard.addKeys('W,S,A,D, G');
+    keys = this.input.keyboard.addKeys('W,S,A,D, J, L');
+    cursorKeys = this.input.keyboard.createCursorKeys();
     //camera
     this.cameras.main.setBounds(0, 0, 800, 600);
     this.cameras.main.startFollow(robot, true);
@@ -72,6 +79,7 @@ class GameScene extends Phaser.Scene  {
     this.scene.launch("ui");
     //colliders
     this.physics.add.collider(robot, walls);
+    popText = this.add.text(robot.x, robot.y, ' ',/* {fontSize: 12}*/).setScale(.5);
 
   }
   update()  {
@@ -81,11 +89,14 @@ class GameScene extends Phaser.Scene  {
         robot.setVelocityX(-200);
         robot.anims.play('walkLeft', true);
         lastKey = 'A';
+        //this ensures that robot stops interacting when movement is started
+        robotInteracting = false;
       }
       else if (keys.D.isDown) {
         robot.setVelocityX(200);
         robot.anims.play('walkRight', true);
         lastKey = 'D';
+        robotInteracting = false;
       }
       else {
         robot.setVelocityX(0);
@@ -94,18 +105,20 @@ class GameScene extends Phaser.Scene  {
         robot.setVelocityY(200);
         robot.anims.play('walkDown', true);
         lastKey = 'S';
+        robotInteracting = false;
       }
       else if (keys.W.isDown) {
         robot.setVelocityY(-200);
         robot.anims.play('walkUp', true);
         lastKey = 'W';
+        robotInteracting = false;
       } else {
         robot.setVelocityY(0);
       }
 
-      //idle animations
+      /*idle animations. these are turned off when the robot is interacting*/
       isKeyDown = this.checkKeysDown();
-      if(!isKeyDown)  {
+      if(!isKeyDown && !robotInteracting)  {
         switch(lastKey) {
           case 'W':
             robot.anims.play('idleU', true);
@@ -122,30 +135,72 @@ class GameScene extends Phaser.Scene  {
         }
       }
 
+      /* if robot is overlapping with charger, then charge will go up. f
+      not, charge will go down. */
+      if (this.physics.overlap(robot, chargeStation)) {
+        chargeStation.anims.play('blink', true);
+        chargeRate = 2;
+      } else {
+        chargeStation.anims.play('still', true);
+        chargeRate = -.2;
+      }
+      /*if robot is overlapping with the tv, happiness will go up, but
+      productivity will go way down
+      does not change battery*/
+      if (this.physics.overlap(robot, tv) && lastKey === 'W') {
+        tv.anims.play('on', true);
+        happinessRate = .4;
+        sanityRate = -.4;
+      } else {
+        tv.anims.play('static', true);
+        happinessRate = -.2;
+        sanityRate = -.2;
+      }
+      /*hides pop text when not overlapping*/
+      if (!(this.physics.overlap(robot, bookshelf)) && !(this.physics.overlap(robot, dumbbells))) {
+        popText.visible = false;
+      }
+      /*robot overlapping with bookshelf. If overlapping, pop up will
+      say press space to read*/
+      if (this.physics.overlap(robot, bookshelf)) {
+        popText.visible = true;
+        popText.x = bookshelf.x - 30;
+        popText.y = bookshelf.y + 50;
+        popText.setText('Press Space to interact');
+        if (this.input.keyboard.checkDown(cursorKeys.space, 1000))  {
+          this.scene.launch('read');
+          robotInteracting = true;
+        }
+        if (robotInteracting) {
+          popText.visible = false;
+        }
+      }
+      //robot overlapping dumbbells
+      if (this.physics.overlap(robot, dumbbells)) {
+        popText.visible = true;
+        popText.x = dumbbells.x - 30;
+        popText.y = dumbbells.y + 30;
+        popText.setText('Press Space to interact');
+        if (this.input.keyboard.checkDown(cursorKeys.space, 1000))  {
+          robotInteracting = true;
+          robot.anims.play('lift', true);
+        }
+        /*when you pick up the dumbbell, the dumbbell on the ground
+        should disappear. this makes it so..*/
+        if (robotInteracting) {
+          dumbbells.visible = false;
+          popText.visible = false;
+        } else {
+          dumbbells.visible = true;
+        }
+      }
+
   }
 
   decay() {
     //this is what ticks every tenth of a second.
 
-    /* if robot is overlapping with charger, then charge will go up. f
-    not, charge will go down. */
-    if (this.physics.overlap(robot, chargeStation)) {
-      chargeStation.anims.play('blink', true);
-      chargeRate = 2;
-    } else {
-      chargeStation.anims.play('still', true);
-      chargeRate = -.2;
-    }
-    /*if robot is overlapping with the tv, happiness will go up, but
-    productivity will go way down
-    does not change battery*/
-    if (this.physics.overlap(robot, tv) && lastKey === 'W') {
-      tv.anims.play('on', true);
-      happinessRate = .4;
-    } else {
-      tv.anims.play('static', true);
-      happinessRate = -.2;
-    }
+
 
     charge += chargeRate;
     happiness += happinessRate;
@@ -200,6 +255,8 @@ class GameScene extends Phaser.Scene  {
     //objects
     chargeStation = this.physics.add.sprite(500, 550, 'chargeStation', 0).setScale(.5);
     tv = this.physics.add.sprite(400, 200, 'tv', 0).setScale(.5);
+    bookshelf = this.physics.add.image(180, 40, 'bookshelf').setScale(.3);
+    dumbbells = this.physics.add.image(70, 450, 'dumbbells').setScale(.3);
   }
   changeTime()  {
     hour++;

@@ -27,7 +27,7 @@ class UIScene extends Phaser.Scene  {
   })
   //day and hour text
   dayText = this.add.text(650, 25, '', {fontSize: 32});
-  hourText = this.add.text(650, 75, '', {frontSize: 18});
+  hourText = this.add.text(650, 75, '', {fontSize: 18});
 
   }
 

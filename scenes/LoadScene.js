@@ -21,6 +21,11 @@ class LoadScene extends Phaser.Scene{
     //objects
     this.load.spritesheet('chargeStation', 'assets/charger.png', { frameWidth: 80, frameHeight: 80 });
     this.load.spritesheet('tv', 'assets/tv.png', { frameWidth: 112, frameHeight: 112 });
+    this.load.image('bookshelf', 'assets/bookshelf.png');
+    this.load.image('dumbbells', 'assets/dumbbells.png');
+
+    //scene screens
+    this.load.image('book', 'assets/book.png');
 
 
   }
@@ -76,6 +81,12 @@ class LoadScene extends Phaser.Scene{
       key: 'walkUp',
       frames: this.anims.generateFrameNumbers('robot', {start: 16, end: 19}),
       frameRate: 10,
+      repeat: -1
+    })
+    this.anims.create({
+      key: 'lift',
+      frames: this.anims.generateFrameNumbers('robot', {start: 20, end: 23}),
+      frameRate: 6,
       repeat: -1
     })
     //charging station
