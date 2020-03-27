@@ -89,6 +89,12 @@ class LoadScene extends Phaser.Scene{
       frameRate: 6,
       repeat: -1
     })
+    this.anims.create({
+      key: 'off',
+      frames: this.anims.generateFrameNumbers('robot', {start: 24, end: 29}),
+      frameRate: 6
+    })
+
     //charging station
 
     this.anims.create({

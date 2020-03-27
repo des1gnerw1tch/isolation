@@ -1,3 +1,4 @@
+/*dead animation needs to work. Should probably trigger when the robot dies but before the death scene. */
 //player
 var robot;
 //input
@@ -16,7 +17,10 @@ var tv;
 var bookshelf;
 var dumbbells;
 var popText;
+
+//states
 var robotInteracting;
+var isDead;
 
 //timers
 var tick;
@@ -48,6 +52,7 @@ class GameScene extends Phaser.Scene  {
     robot.setScale(.5);
     robot.setDepth(1);
     robotInteracting = false;
+    isDead = false;
     //input
     keys = this.input.keyboard.addKeys('W,S,A,D, J, L');
     cursorKeys = this.input.keyboard.createCursorKeys();
@@ -85,40 +90,44 @@ class GameScene extends Phaser.Scene  {
   update()  {
 
     //movement and animations
-    if (keys.A.isDown)  {
-        robot.setVelocityX(-200);
-        robot.anims.play('walkLeft', true);
-        lastKey = 'A';
-        //this ensures that robot stops interacting when movement is started
-        robotInteracting = false;
-      }
-      else if (keys.D.isDown) {
-        robot.setVelocityX(200);
-        robot.anims.play('walkRight', true);
-        lastKey = 'D';
-        robotInteracting = false;
-      }
-      else {
-        robot.setVelocityX(0);
-      }
-      if (keys.S.isDown) {
-        robot.setVelocityY(200);
-        robot.anims.play('walkDown', true);
-        lastKey = 'S';
-        robotInteracting = false;
-      }
-      else if (keys.W.isDown) {
-        robot.setVelocityY(-200);
-        robot.anims.play('walkUp', true);
-        lastKey = 'W';
-        robotInteracting = false;
-      } else {
-        robot.setVelocityY(0);
-      }
 
-      /*idle animations. these are turned off when the robot is interacting*/
+    if (!isDead)  {
+      if (keys.A.isDown)  {
+          robot.setVelocityX(-200);
+          robot.anims.play('walkLeft', true);
+          lastKey = 'A';
+          //this ensures that robot stops interacting when movement is started
+          robotInteracting = false;
+        }
+        else if (keys.D.isDown) {
+          robot.setVelocityX(200);
+          robot.anims.play('walkRight', true);
+          lastKey = 'D';
+          robotInteracting = false;
+        }
+        else {
+          robot.setVelocityX(0);
+        }
+        if (keys.S.isDown) {
+          robot.setVelocityY(200);
+          robot.anims.play('walkDown', true);
+          lastKey = 'S';
+          robotInteracting = false;
+        }
+        else if (keys.W.isDown) {
+          robot.setVelocityY(-200);
+          robot.anims.play('walkUp', true);
+          lastKey = 'W';
+          robotInteracting = false;
+        } else {
+          robot.setVelocityY(0);
+        }
+    }
+
+      /*idle animations. these are turned off when the robot is interacting
+      or when is dead. */
       isKeyDown = this.checkKeysDown();
-      if(!isKeyDown && !robotInteracting)  {
+      if(!isKeyDown && !robotInteracting && !isDead)  {
         switch(lastKey) {
           case 'W':
             robot.anims.play('idleU', true);
@@ -157,9 +166,9 @@ class GameScene extends Phaser.Scene  {
         sanityRate = -.2;
       }
       /*hides pop text when not overlapping*/
-      if (!(this.physics.overlap(robot, bookshelf)) && !(this.physics.overlap(robot, dumbbells))) {
+      /*if (!(this.physics.overlap(robot, bookshelf)) && !(this.physics.overlap(robot, dumbbells)) || robotInteracting) {
         popText.visible = false;
-      }
+      }*/
       /*robot overlapping with bookshelf. If overlapping, pop up will
       say press space to read*/
       if (this.physics.overlap(robot, bookshelf)) {
@@ -171,9 +180,7 @@ class GameScene extends Phaser.Scene  {
           this.scene.launch('read');
           robotInteracting = true;
         }
-        if (robotInteracting) {
-          popText.visible = false;
-        }
+
       }
       //robot overlapping dumbbells
       if (this.physics.overlap(robot, dumbbells)) {
@@ -189,10 +196,33 @@ class GameScene extends Phaser.Scene  {
         should disappear. this makes it so..*/
         if (robotInteracting) {
           dumbbells.visible = false;
-          popText.visible = false;
+          chargeRate = -.6;
+          happinessRate = 1;
+          sanityRate = 2;
+          /*popText.visible = false;*/
         } else {
           dumbbells.visible = true;
+          chargeRate = -.2;
+          happinessRate = -.2;
+          sanityRate = -.2;
         }
+      }
+
+      /*hides pop text when not overlapping or when not interacting. Needs to be
+      below all of the hover checks, so it can turn off poptext after interact.*/
+      if (!(this.physics.overlap(robot, bookshelf)) && !(this.physics.overlap(robot, dumbbells)) || robotInteracting) {
+        popText.visible = false;
+      }
+      /*This system ensures that this if statement below is only iterated once.
+      If it was itererated more than once, then it would be weird and might
+      make multiple timers. */
+      if (charge === 0 && !isDead) {
+        isDead = true;
+        robotInteracting = false;
+        tick.paused = true;
+        hourTimer.paused = true;
+        robot.anims.play('off', true);
+        this.time.addEvent({delay: 5000, callback: this.death, callbackScope: this, loop: false});
       }
 
   }
@@ -200,12 +230,9 @@ class GameScene extends Phaser.Scene  {
   decay() {
     //this is what ticks every tenth of a second.
 
-
-
     charge += chargeRate;
     happiness += happinessRate;
     sanity += sanityRate;
-
     //makes sure nothing gets past 100 or lower than 0
     if (charge > 100) {
       charge = 100;
@@ -275,5 +302,11 @@ class GameScene extends Phaser.Scene  {
       return false;
     }
   }
+
+  death() {
+    this.scene.launch("dead");
+    this.scene.pause("game");
+  }
+
 
 }
