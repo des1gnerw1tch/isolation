@@ -27,6 +27,13 @@ class LoadScene extends Phaser.Scene{
     //scene screens
     this.load.image('book', 'assets/book.png');
 
+    //music
+    this.load.audio('mainTheme', 'assets/town.mp3');
+    //sound effects
+    this.load.audio('ambientSound', 'assets/ambientSound.wav');
+    this.load.audio('bigBro', 'assets/girlBigBro.mp3');
+    this.load.audio('girlTrapped', 'assets/girlTrapped.mp3');
+
 
   }
   create()  {

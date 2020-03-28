@@ -1,4 +1,8 @@
-/*dead animation needs to work. Should probably trigger when the robot dies but before the death scene. */
+/*give credit to: https://opengameart.org/content/generic-8-bit-jrpg-soundtrack
+for main soundtrack
+https://opengameart.org/content/little-girl-voices
+for little girls noises
+ */
 //player
 var robot;
 //input
@@ -26,6 +30,9 @@ var isDead;
 var tick;
 var hourTimer;
 
+var trigScary;
+var trigTime;
+
 //decay rates
 var chargeRate;
 var happinessRate;
@@ -37,6 +44,15 @@ var hour;
 
 //groups
 var walls;
+
+//music
+var soundtrack;
+var scaryMusic;
+var happyMusicTrig;
+var scaryMusicTrig;
+//sounds
+var girlVoice1;
+var girlVoice2;
 
 class GameScene extends Phaser.Scene  {
 
@@ -85,6 +101,17 @@ class GameScene extends Phaser.Scene  {
     //colliders
     this.physics.add.collider(robot, walls);
     popText = this.add.text(robot.x, robot.y, ' ',/* {fontSize: 12}*/).setScale(.5);
+    //music
+    soundtrack = this.sound.add('mainTheme');
+    soundtrack.setLoop(true);
+    soundtrack.play();
+    happyMusicTrig = true;
+    //sounds
+    scaryMusic = this.sound.add('ambientSound');
+    scaryMusic.setLoop = false;
+    scaryMusicTrig = false;
+    girlVoice1 = this.sound.add('girlTrapped');
+    girlVoice2 = this.sound.add('bigBro');
 
   }
   update()  {
@@ -146,7 +173,7 @@ class GameScene extends Phaser.Scene  {
 
       /* if robot is overlapping with charger, then charge will go up. f
       not, charge will go down. */
-      if (this.physics.overlap(robot, chargeStation)) {
+      if (this.physics.overlap(robot, chargeStation) && !isDead) {
         chargeStation.anims.play('blink', true);
         chargeRate = 2;
       } else {
@@ -156,7 +183,7 @@ class GameScene extends Phaser.Scene  {
       /*if robot is overlapping with the tv, happiness will go up, but
       productivity will go way down
       does not change battery*/
-      if (this.physics.overlap(robot, tv) && lastKey === 'W') {
+      if (this.physics.overlap(robot, tv) && lastKey === 'W' && !isDead) {
         tv.anims.play('on', true);
         happinessRate = .4;
         sanityRate = -.4;
@@ -171,7 +198,7 @@ class GameScene extends Phaser.Scene  {
       }*/
       /*robot overlapping with bookshelf. If overlapping, pop up will
       say press space to read*/
-      if (this.physics.overlap(robot, bookshelf)) {
+      if (this.physics.overlap(robot, bookshelf) && !isDead) {
         popText.visible = true;
         popText.x = bookshelf.x - 30;
         popText.y = bookshelf.y + 50;
@@ -184,13 +211,15 @@ class GameScene extends Phaser.Scene  {
       }
       //robot overlapping dumbbells
       if (this.physics.overlap(robot, dumbbells)) {
-        popText.visible = true;
-        popText.x = dumbbells.x - 30;
-        popText.y = dumbbells.y + 30;
-        popText.setText('Press Space to interact');
-        if (this.input.keyboard.checkDown(cursorKeys.space, 1000))  {
-          robotInteracting = true;
-          robot.anims.play('lift', true);
+        if (!isDead)  {
+          popText.visible = true;
+          popText.x = dumbbells.x - 30;
+          popText.y = dumbbells.y + 30;
+          popText.setText('Press Space to interact');
+          if (this.input.keyboard.checkDown(cursorKeys.space, 1000))  {
+            robotInteracting = true;
+            robot.anims.play('lift', true);
+          }
         }
         /*when you pick up the dumbbell, the dumbbell on the ground
         should disappear. this makes it so..*/
@@ -213,6 +242,30 @@ class GameScene extends Phaser.Scene  {
       if (!(this.physics.overlap(robot, bookshelf)) && !(this.physics.overlap(robot, dumbbells)) || robotInteracting) {
         popText.visible = false;
       }
+
+      /*this is what happens when sanity gets too low ....*/
+      if (sanity < 34)  {
+        var rand = Phaser.Math.Between(1, sanity * 10);
+        if (rand === 1)
+        this.cameras.main.shake(400 * (1-(sanity/100)));
+        if (rand === 2)
+        this.cameras.main.flash(400 * (1-(sanity/100)));
+      }
+      if (sanity < 34 && !scaryMusicTrig) {
+        trigTime = Phaser.Math.Between(1000, 10000);
+        trigScary = this.time.addEvent({delay: trigTime, callback: this.playScarySound, callbackScope: this, loop: false});
+        soundtrack.pause();
+        scaryMusicTrig = true;
+        happyMusicTrig = false;
+      }
+      if (sanity > 34 && !happyMusicTrig) {
+        soundtrack.play();
+        scaryMusic.pause();
+        trigScary.paused = true;
+        happyMusicTrig = true;
+        scaryMusicTrig = false;
+      }
+
       /*This system ensures that this if statement below is only iterated once.
       If it was itererated more than once, then it would be weird and might
       make multiple timers. */
@@ -222,6 +275,8 @@ class GameScene extends Phaser.Scene  {
         tick.paused = true;
         hourTimer.paused = true;
         robot.anims.play('off', true);
+        robot.setVelocityX(0);
+        robot.setVelocityY(0);
         this.time.addEvent({delay: 5000, callback: this.death, callbackScope: this, loop: false});
       }
 
@@ -249,6 +304,8 @@ class GameScene extends Phaser.Scene  {
     } else if (sanity < 0){
       sanity = 0;
     }
+
+
 
   }
 
@@ -287,6 +344,7 @@ class GameScene extends Phaser.Scene  {
   }
   changeTime()  {
     hour++;
+
     if (hour === 24) {
       day++;
 
@@ -302,6 +360,29 @@ class GameScene extends Phaser.Scene  {
       return false;
     }
   }
+
+  /*play scary sound*/
+  playScarySound()  {
+    var num = Phaser.Math.Between(1, 3);
+    trigTime = Phaser.Math.Between(6000, 16000);
+    switch (num)  {
+      case 1:
+        if (!(scaryMusic.isPlaying)) {
+          scaryMusic.play();
+        } else {
+          console.log('canceled scary noise');
+        }
+        break;
+      case 2:
+        girlVoice1.play();
+        break;
+      case 3:
+       girlVoice2.play();
+       break;
+     }
+
+     trigScary = this.time.addEvent({delay: trigTime, callback: this.playScarySound, callbackScope: this, loop: false});
+   }
 
   death() {
     this.scene.launch("dead");

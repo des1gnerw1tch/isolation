@@ -26,7 +26,7 @@ class ReadScene extends Phaser.Scene {
 
   update()  {
     if (this.input.keyboard.checkDown(keys.W, 1000) || this.input.keyboard.checkDown(keys.A, 1000)
-    || this.input.keyboard.checkDown(keys.S, 1000) || this.input.keyboard.checkDown(keys.D, 1000))  {
+    || this.input.keyboard.checkDown(keys.S, 1000) || this.input.keyboard.checkDown(keys.D, 1000) || isDead)  {
 
       this.scene.stop('read');
     }
