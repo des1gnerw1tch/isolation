@@ -5,6 +5,8 @@ for little girls noises
  */
 //player
 var robot;
+var baseSpeed = 300;
+var speedBoost = false;
 //input
 var keys;
 var cursorKeys;
@@ -18,8 +20,11 @@ var sanity;
 //stations
 var chargeStation;
 var tv;
+var sofa;
 var bookshelf;
+var middleBookshelf;
 var dumbbells;
+var pc;
 var popText;
 
 //states
@@ -37,6 +42,9 @@ var trigTime;
 var chargeRate;
 var happinessRate;
 var sanityRate;
+const BASECHARGE = -.2;
+const BASEHAPPINESS = -.2;
+const BASESANITY = -.2;
 
 //progress and days
 var day;
@@ -53,6 +61,9 @@ var scaryMusicTrig;
 //sounds
 var girlVoice1;
 var girlVoice2;
+var shutter;
+var faded;
+var boostSound;
 
 class GameScene extends Phaser.Scene  {
 
@@ -84,13 +95,14 @@ class GameScene extends Phaser.Scene  {
     this.buildWalls();
     this.placeObjects();
 
-    //decay and meters
-    charge = 100;
-    happiness = 100;
-    sanity = 100;
-    chargeRate = -.2;
-    happinessRate = -.2;
-    sanityRate = -.2;
+    //decay and meters, starts at 99.9 so there is no speed boost in the beginning.
+    charge = 99.9;
+    happiness = 99.9;
+    sanity = 99.9;
+
+    chargeRate = BASECHARGE;
+    happinessRate = BASEHAPPINESS;
+    sanityRate = BASESANITY;
     tick = this.time.addEvent({delay: 100, callback: this.decay, callbackScope: this, loop: true});
     //day and hours
     day = 1;
@@ -112,22 +124,41 @@ class GameScene extends Phaser.Scene  {
     scaryMusicTrig = false;
     girlVoice1 = this.sound.add('girlTrapped');
     girlVoice2 = this.sound.add('bigBro');
+    shutter = this.sound.add('shutter');
+    boostSound = this.sound.add('boost');
+    //faded
+    faded = false;
 
   }
   update()  {
 
     //movement and animations
+    /*speed boost when super happy*/
+    var speed;
+    if (speedBoost) {
+      speed = baseSpeed * 1.5;
+    } else {
+      speed = baseSpeed * (happiness/100);
+    }
+
+    if (happiness === 100 && !speedBoost)  {
+      speedBoost = true;
+      boostSound.play();
+      this.time.addEvent({delay: 5000, callback: this.stopBoost, callbackScope: this, loop: false});
+    }
+
+
 
     if (!isDead)  {
       if (keys.A.isDown)  {
-          robot.setVelocityX(-200);
+          robot.setVelocityX(-speed);
           robot.anims.play('walkLeft', true);
           lastKey = 'A';
           //this ensures that robot stops interacting when movement is started
           robotInteracting = false;
         }
         else if (keys.D.isDown) {
-          robot.setVelocityX(200);
+          robot.setVelocityX(speed);
           robot.anims.play('walkRight', true);
           lastKey = 'D';
           robotInteracting = false;
@@ -136,13 +167,13 @@ class GameScene extends Phaser.Scene  {
           robot.setVelocityX(0);
         }
         if (keys.S.isDown) {
-          robot.setVelocityY(200);
+          robot.setVelocityY(speed);
           robot.anims.play('walkDown', true);
           lastKey = 'S';
           robotInteracting = false;
         }
         else if (keys.W.isDown) {
-          robot.setVelocityY(-200);
+          robot.setVelocityY(-speed);
           robot.anims.play('walkUp', true);
           lastKey = 'W';
           robotInteracting = false;
@@ -178,34 +209,33 @@ class GameScene extends Phaser.Scene  {
         chargeRate = 2;
       } else {
         chargeStation.anims.play('still', true);
-        chargeRate = -.2;
+        chargeRate = BASECHARGE;
       }
       /*if robot is overlapping with the tv, happiness will go up, but
       productivity will go way down
       does not change battery*/
-      if (this.physics.overlap(robot, tv) && lastKey === 'W' && !isDead) {
+      if (this.physics.overlap(robot, tv) || this.physics.overlap(robot, sofa) && lastKey === 'W' && !isDead) {
         tv.anims.play('on', true);
-        happinessRate = .4;
+        happinessRate = 1;
         sanityRate = -.4;
+        robotInteracting = true;
+        robot.anims.play('idleU', true);
       } else {
         tv.anims.play('static', true);
-        happinessRate = -.2;
-        sanityRate = -.2;
+        /*happinessRate = BASEHAPPINESS;
+        sanityRate = BASESANITY;*/
       }
-      /*hides pop text when not overlapping*/
-      /*if (!(this.physics.overlap(robot, bookshelf)) && !(this.physics.overlap(robot, dumbbells)) || robotInteracting) {
-        popText.visible = false;
-      }*/
+
       /*robot overlapping with bookshelf. If overlapping, pop up will
       say press space to read*/
       if (this.physics.overlap(robot, bookshelf) && !isDead) {
         popText.visible = true;
-        popText.x = bookshelf.x - 30;
-        popText.y = bookshelf.y + 50;
+        popText.x = middleBookshelf.x - 60;
+        popText.y = middleBookshelf.y + 50;
         popText.setText('Press Space to interact');
         if (this.input.keyboard.checkDown(cursorKeys.space, 1000))  {
-          this.scene.launch('read');
           robotInteracting = true;
+          this.scene.launch('read');
         }
 
       }
@@ -225,31 +255,48 @@ class GameScene extends Phaser.Scene  {
         should disappear. this makes it so..*/
         if (robotInteracting) {
           dumbbells.visible = false;
-          chargeRate = -.6;
-          happinessRate = 1;
+          chargeRate = -.8;
+          happinessRate = .8;
           sanityRate = 2;
-          /*popText.visible = false;*/
+
         } else {
           dumbbells.visible = true;
-          chargeRate = -.2;
-          happinessRate = -.2;
-          sanityRate = -.2;
         }
+      }
+      /*computer games*/
+      if (this.physics.overlap(robot, pc) && !isDead)  {
+        pc.setFrame(1);
+        popText.visible = true;
+        popText.x = pc.x - 30;
+        popText.y = pc.y + 30;
+        popText.setText('Press Space to interact');
+        if (this.input.keyboard.checkDown(cursorKeys.space, 1000))  {
+          robotInteracting = true;
+          this.scene.launch('pong');
+        }
+      } else {
+        pc.setFrame(0);
       }
 
       /*hides pop text when not overlapping or when not interacting. Needs to be
       below all of the hover checks, so it can turn off poptext after interact.*/
-      if (!(this.physics.overlap(robot, bookshelf)) && !(this.physics.overlap(robot, dumbbells)) || robotInteracting) {
+      if (!(this.physics.overlap(robot, bookshelf)) && !(this.physics.overlap(robot, dumbbells))
+       && !(this.physics.overlap(robot, pc)) || robotInteracting) {
         popText.visible = false;
       }
 
       /*this is what happens when sanity gets too low ....*/
       if (sanity < 34)  {
         var rand = Phaser.Math.Between(1, sanity * 10);
-        if (rand === 1)
-        this.cameras.main.shake(400 * (1-(sanity/100)));
-        if (rand === 2)
-        this.cameras.main.flash(400 * (1-(sanity/100)));
+        if (rand === 1) {
+          this.cameras.main.shake(400 * (1-(sanity/100)));
+          robotInteracting = false;
+        }
+        if (rand === 2) {
+          this.cameras.main.flash(400 * (1-(sanity/100)));
+          robotInteracting = false;
+          shutter.play();
+        }
       }
       if (sanity < 34 && !scaryMusicTrig) {
         trigTime = Phaser.Math.Between(1000, 10000);
@@ -264,6 +311,13 @@ class GameScene extends Phaser.Scene  {
         trigScary.paused = true;
         happyMusicTrig = true;
         scaryMusicTrig = false;
+        this.cameras.main.fadeIn(6000);
+        faded = false;
+      }
+      //vision fades to darkness...
+      if (sanity < 10 && !faded) {
+        this.cameras.main.fade(6000);
+        faded = true;
       }
 
       /*This system ensures that this if statement below is only iterated once.
@@ -284,7 +338,14 @@ class GameScene extends Phaser.Scene  {
 
   decay() {
     //this is what ticks every tenth of a second.
-
+    /*rates are different on different days if robot is not interacting,
+    the sanity and happiness rate are based on the day. if robot is interacting,
+    the sanity and happiness rate is based on what we set it to when it is interacting*/
+    if (!robotInteracting)  {
+      happinessRate = BASEHAPPINESS * (day/2);
+      sanityRate = BASESANITY * (day/2);
+    }
+    /*actual math*/
     charge += chargeRate;
     happiness += happinessRate;
     sanity += sanityRate;
@@ -338,9 +399,22 @@ class GameScene extends Phaser.Scene  {
   placeObjects()  {
     //objects
     chargeStation = this.physics.add.sprite(500, 550, 'chargeStation', 0).setScale(.5);
+
     tv = this.physics.add.sprite(400, 200, 'tv', 0).setScale(.5);
-    bookshelf = this.physics.add.image(180, 40, 'bookshelf').setScale(.3);
+    this.add.image(400, 260, 'coffeeTable').setScale(.5);
+    sofa = this.physics.add.image(400, 300, 'sofa').setScale(.5);
+
+  // old location, bookshelf = this.physics.add.image(180, 40, 'bookshelf').setScale(.3);
+    bookshelf = this.physics.add.group();
+    bookshelf.create(665, 50, 'bookshelf').setScale(.3);
+    middleBookshelf = bookshelf.create(700, 50, 'bookshelf').setScale(.3);
+    bookshelf.create(735, 50, 'bookshelf').setScale(.3);
     dumbbells = this.physics.add.image(70, 450, 'dumbbells').setScale(.3);
+  //old loc  pc = this.physics.add.sprite(700, 100, 'pc', 0).setScale(.4);
+    pc = this.physics.add.sprite(200, 70, 'pc', 0).setScale(.4).setAngle(-90);
+    this.add.image(150, 70, 'lamp').setScale(.25);
+    this.add.image(200, 100, 'seat').setScale(.5);
+    this.add.image(100, 170, 'officeRug').setScale(.5);
   }
   changeTime()  {
     hour++;
@@ -382,6 +456,9 @@ class GameScene extends Phaser.Scene  {
      }
 
      trigScary = this.time.addEvent({delay: trigTime, callback: this.playScarySound, callbackScope: this, loop: false});
+   }
+   stopBoost()  {
+     speedBoost = false;
    }
 
   death() {

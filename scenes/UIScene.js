@@ -34,7 +34,9 @@ class UIScene extends Phaser.Scene  {
   update()  {
     //meter text
     meterText.setText('Charge ' + charge.toFixed(2) +
-    '\nHappy ' + happiness.toFixed(2) + '\nSanity ' + sanity.toFixed(2));
+    '\nHappy ' + happiness.toFixed(2) + '\nSanity ' + sanity.toFixed(2)
+  + '\n Charge rate ' + chargeRate + '\n Happy rate ' + happinessRate + '\n Sanity rate ' + sanityRate
+ + '\n Speed Boost? ' + speedBoost);
     //bars for categories
     bar.clear();
     bar.fillRect(150, 32, charge, 13);

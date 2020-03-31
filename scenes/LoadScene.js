@@ -18,14 +18,21 @@ class LoadScene extends Phaser.Scene{
     //sprites
 
     this.load.spritesheet('robot', 'assets/robot.png', { frameWidth: 48, frameHeight: 51 });
-    //objects
+    //interactive objects
     this.load.spritesheet('chargeStation', 'assets/charger.png', { frameWidth: 80, frameHeight: 80 });
     this.load.spritesheet('tv', 'assets/tv.png', { frameWidth: 112, frameHeight: 112 });
     this.load.image('bookshelf', 'assets/bookshelf.png');
     this.load.image('dumbbells', 'assets/dumbbells.png');
-
+    this.load.spritesheet('pc', 'assets/computer.png', { frameWidth: 160, frameHeight: 160 });
+    //props
+    this.load.image('lamp', 'assets/lamp.png');
+    this.load.image('seat', 'assets/seat.png');
+    this.load.image('sofa', 'assets/sofa.png');
+    this.load.image('coffeeTable', 'assets/coffeeTable.png');
+    this.load.image('officeRug', 'assets/officeRug.png');
     //scene screens
     this.load.image('book', 'assets/book.png');
+
 
     //music
     this.load.audio('mainTheme', 'assets/town.mp3');
@@ -33,6 +40,13 @@ class LoadScene extends Phaser.Scene{
     this.load.audio('ambientSound', 'assets/ambientSound.wav');
     this.load.audio('bigBro', 'assets/girlBigBro.mp3');
     this.load.audio('girlTrapped', 'assets/girlTrapped.mp3');
+    this.load.audio('shutter', 'assets/shutter.mp3');
+    this.load.audio('boost', 'assets/boost.wav');
+    //pong
+    this.load.image('paddle', 'assets/paddle.png');
+    this.load.image('ball', 'assets/ball.png');
+    this.load.audio('hit', 'assets/hit.ogg');
+    this.load.audio('lose', 'assets/back.wav');
 
 
   }
