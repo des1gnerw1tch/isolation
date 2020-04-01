@@ -20,7 +20,8 @@ class ReadScene extends Phaser.Scene {
     fillStyle: {
       color: 0x32CD32 // green
     }
-  })
+    })
+    sanityRate = 0;
 
   }
 

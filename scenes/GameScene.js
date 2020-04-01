@@ -150,14 +150,14 @@ class GameScene extends Phaser.Scene  {
 
 
     if (!isDead)  {
-      if (keys.A.isDown)  {
+      if (keys.A.isDown && !isLifting)  {
           robot.setVelocityX(-speed);
           robot.anims.play('walkLeft', true);
           lastKey = 'A';
           //this ensures that robot stops interacting when movement is started
           robotInteracting = false;
         }
-        else if (keys.D.isDown) {
+        else if (keys.D.isDown && !isLifting) {
           robot.setVelocityX(speed);
           robot.anims.play('walkRight', true);
           lastKey = 'D';
@@ -206,7 +206,7 @@ class GameScene extends Phaser.Scene  {
       not, charge will go down. */
       if (this.physics.overlap(robot, chargeStation) && !isDead) {
         chargeStation.anims.play('blink', true);
-        chargeRate = 2;
+        chargeRate = 6;
       } else {
         chargeStation.anims.play('still', true);
         chargeRate = BASECHARGE;
@@ -248,16 +248,17 @@ class GameScene extends Phaser.Scene  {
           popText.setText('Press Space to interact');
           if (this.input.keyboard.checkDown(cursorKeys.space, 1000))  {
             robotInteracting = true;
-            robot.anims.play('lift', true);
+            this.scene.launch("liftWeight");
+            //robot.anims.play('lift', true);
           }
         }
         /*when you pick up the dumbbell, the dumbbell on the ground
         should disappear. this makes it so..*/
         if (robotInteracting) {
           dumbbells.visible = false;
-          chargeRate = -.8;
+          /*chargeRate = -.8;
           happinessRate = .8;
-          sanityRate = 2;
+          sanityRate = 2;*/
 
         } else {
           dumbbells.visible = true;

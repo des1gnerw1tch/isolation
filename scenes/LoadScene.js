@@ -32,7 +32,7 @@ class LoadScene extends Phaser.Scene{
     this.load.image('officeRug', 'assets/officeRug.png');
     //scene screens
     this.load.image('book', 'assets/book.png');
-
+    this.load.spritesheet('liftPopup', 'assets/liftPopup.png', { frameWidth: 240, frameHeight: 180 });
 
     //music
     this.load.audio('mainTheme', 'assets/town.mp3');
@@ -45,7 +45,7 @@ class LoadScene extends Phaser.Scene{
     //pong
     this.load.image('paddle', 'assets/paddle.png');
     this.load.image('ball', 'assets/ball.png');
-    this.load.audio('hit', 'assets/hit.ogg');
+    this.load.audio('hit', 'assets/hit.wav');
     this.load.audio('lose', 'assets/back.wav');
 
 

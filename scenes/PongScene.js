@@ -47,6 +47,7 @@ class PongScene extends Phaser.Scene{
     /*game*/
     scoreText = this.add.text(10, 10).setDepth(1);
     score = 0;
+    sanityRate = sanityRate/4;
 
 
 
