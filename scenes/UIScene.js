@@ -59,7 +59,7 @@ class UIScene extends Phaser.Scene  {
     meterText.setText('Charge ' + charge.toFixed(2) +
     '\nHappy ' + happiness.toFixed(2) + '\nSanity ' + sanity.toFixed(2)
   + '\n Charge rate ' + chargeRate + '\n Happy rate ' + happinessRate + '\n Sanity rate ' + sanityRate
- + '\n Speed Boost? ' + speedBoost);
+ + '\n Speed Boost? ' + speedBoost + '\n Version 1.0');
     //bars for categories
 
     /*Charge Bar- this code handles the audio for the low battery alarm also, when
