@@ -1,4 +1,5 @@
 var player;
+var isPlayingPong;
 var ai;
 var pointer;
 var debugText;
@@ -24,7 +25,7 @@ class PongScene extends Phaser.Scene{
     this.physics.world.setBounds(0, 0, 400, 300);
     /*player */
     player = this.physics.add.sprite(200, 280, 'paddle');
-    player.body.collideWorldBounds = false;
+    player.body.collideWorldBounds = true;
     player.setImmovable();
     /*Ai*/
     ai = this.physics.add.sprite(200, 20, 'paddle');
@@ -35,7 +36,7 @@ class PongScene extends Phaser.Scene{
     //ball.setVelocityY(600);
     ball.setBounce(1);
     ball.body.collideWorldBounds = true;
-    /*input*/
+    /*input, used to use pointer as paddle. Deemed not good and replaced with keys*/
     pointer = this.input.activePointer;
 
     //debug
@@ -48,6 +49,7 @@ class PongScene extends Phaser.Scene{
     scoreText = this.add.text(10, 10).setDepth(1);
     score = 0;
     sanityRate = sanityRate/4;
+    isPlayingPong = true;
 
 
 
@@ -59,11 +61,18 @@ class PongScene extends Phaser.Scene{
   update()  {
     //change in state of robot
     if ( isDead || !(robotInteracting))  {
-
+      isPlayingPong = false;
       this.scene.stop("pong");
     }
-
-    player.x = pointer.x - 200;
+    /*this is how you would control it by pointer*/
+    /*player.x = pointer.x - 200;*/
+    if (keys.A.isDown)  {
+      player.setVelocityX(-800);
+    } else if (keys.D.isDown) {
+      player.setVelocityX(800);
+    } else {
+      player.setVelocityX(0);
+    }
     ai.x = ball.x;
 
     /*debug menu, helped with creating*/
@@ -110,6 +119,7 @@ class PongScene extends Phaser.Scene{
     ball.setVelocityY(600);
   }
   endGame() {
+    isPlayingPong = false;
     happiness -= 10;
     sanity -= 20;
     loseSound.play();

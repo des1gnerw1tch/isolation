@@ -42,6 +42,7 @@ class LoadScene extends Phaser.Scene{
     this.load.audio('girlTrapped', 'assets/girlTrapped.mp3');
     this.load.audio('shutter', 'assets/shutter.mp3');
     this.load.audio('boost', 'assets/boost.wav');
+    this.load.audio('lowHealth', 'assets/lowHealth.wav');
     //pong
     this.load.image('paddle', 'assets/paddle.png');
     this.load.image('ball', 'assets/ball.png');
@@ -134,7 +135,7 @@ class LoadScene extends Phaser.Scene{
     this.anims.create({
       key: 'off',
       frames: [ { key: 'tv', frame: 0 } ],
-      frameRate: 8,
+      frameRate: 8
     })
 
     this.anims.create({

@@ -150,14 +150,14 @@ class GameScene extends Phaser.Scene  {
 
 
     if (!isDead)  {
-      if (keys.A.isDown && !isLifting)  {
+      if (keys.A.isDown && !isLifting && !isPlayingPong)  {
           robot.setVelocityX(-speed);
           robot.anims.play('walkLeft', true);
           lastKey = 'A';
           //this ensures that robot stops interacting when movement is started
           robotInteracting = false;
         }
-        else if (keys.D.isDown && !isLifting) {
+        else if (keys.D.isDown && !isLifting && !isPlayingPong) {
           robot.setVelocityX(speed);
           robot.anims.play('walkRight', true);
           lastKey = 'D';
@@ -324,12 +324,16 @@ class GameScene extends Phaser.Scene  {
       /*This system ensures that this if statement below is only iterated once.
       If it was itererated more than once, then it would be weird and might
       make multiple timers. */
-      if (charge === 0 && !isDead) {
-        isDead = true;
+      if (charge === 0  || sanity === 0 || happiness === 0 && !isDead) {
+        soundtrack.pause();
         robotInteracting = false;
         tick.paused = true;
         hourTimer.paused = true;
-        robot.anims.play('off', true);
+        /*charge death animation*/
+        if (charge === 0 && !isDead) {
+          robot.anims.play('off', true);
+        }
+        isDead = true;
         robot.setVelocityX(0);
         robot.setVelocityY(0);
         this.time.addEvent({delay: 5000, callback: this.death, callbackScope: this, loop: false});
